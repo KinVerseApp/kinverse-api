@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from shared.db_types import utcnow
 from shared.exceptions import NotFoundError, ValidationError
 from users.repository import UserRepository
 from .models import RelationshipEdge
@@ -94,7 +94,7 @@ class RelationshipService:
             edge,
             {
                 "status": "confirmed",
-                "confirmed_at": datetime.now(timezone.utc),
+                "confirmed_at": utcnow(),
                 "confirmed_by_person_id": person.id if person else None,
             },
         )

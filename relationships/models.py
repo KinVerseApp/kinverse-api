@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from shared.database import Base
+from shared.db_types import UTCDateTime, utcnow
 from shared.pg_enums import EdgeSourceEnum, EdgeStatusEnum, EdgeTypeEnum, PartnerTypeEnum
 
 
@@ -46,10 +47,10 @@ class RelationshipEdge(Base):
     confirmed_by_person_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("person.id"), nullable=True
     )
-    confirmed_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    confirmed_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
-        default=datetime.utcnow, nullable=False, onupdate=datetime.utcnow
+        UTCDateTime, default=utcnow, nullable=False, onupdate=utcnow
     )

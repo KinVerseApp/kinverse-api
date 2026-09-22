@@ -8,6 +8,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from shared.database import Base
+from shared.db_types import UTCDateTime, utcnow
 from shared.pg_enums import AccountStatusEnum, AuthProviderEnum, DobPrecisionEnum, GenderEnum, VisibilityEnum
 
 
@@ -18,11 +19,11 @@ class UserAccount(Base):
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     auth_provider: Mapped[str] = mapped_column(AuthProviderEnum, nullable=False)
     auth_provider_subject: Mapped[str | None] = mapped_column(String, nullable=True)
-    email_verified_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    email_verified_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     status: Mapped[str] = mapped_column(AccountStatusEnum, default="active", nullable=False)
-    last_login_at: Mapped[datetime | None] = mapped_column(nullable=True)
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, nullable=False, onupdate=datetime.utcnow)
+    last_login_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False, onupdate=utcnow)
 
     # Person has two FKs to user_account (user_account_id, created_by_user_account_id) —
     # foreign_keys must be explicit or SQLAlchemy can't tell which one this relates on.
@@ -53,8 +54,8 @@ class Person(Base):
     is_deceased: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     deceased_on: Mapped[date | None] = mapped_column(Date, nullable=True)
     default_visibility: Mapped[str] = mapped_column(VisibilityEnum, default="family_network", nullable=False)
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(default=datetime.utcnow, nullable=False, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False, onupdate=utcnow)
 
     user_account: Mapped["UserAccount | None"] = relationship(
         back_populates="person", foreign_keys=[user_account_id]
