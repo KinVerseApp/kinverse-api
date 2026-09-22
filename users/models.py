@@ -19,6 +19,9 @@ class UserAccount(Base):
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     auth_provider: Mapped[str] = mapped_column(AuthProviderEnum, nullable=False)
     auth_provider_subject: Mapped[str | None] = mapped_column(String, nullable=True)
+    # Only set for auth_provider == "email". NULL for google/apple/microsoft
+    # accounts, which authenticate via auth_provider_subject instead.
+    password_hash: Mapped[str | None] = mapped_column(String, nullable=True)
     email_verified_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     status: Mapped[str] = mapped_column(AccountStatusEnum, default="active", nullable=False)
     last_login_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
