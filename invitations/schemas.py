@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 class InvitationCreate(BaseModel):
     invitee_email: str | None = None
+    invitee_phone: str | None = None
     person_id: UUID | None = None
     method: str = "email"
     scope: str = "person"
