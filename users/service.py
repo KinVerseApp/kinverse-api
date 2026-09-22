@@ -5,30 +5,20 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.exceptions import NotFoundError
-from .models import Person, UserAccount
 from .repository import UserRepository
 
 
 class UserService:
+    # Registration and logout live in auth/service.py (AuthService) - this
+    # module previously had its own separate, unused register_user()/
+    # logout() that diverged from the ones actually wired to routes.
+    # Two copies of "create a user" is exactly how the auth bug shipped:
+    # one implementation got fixed, the other quietly kept working
+    # differently. Only what's actually used stays here.
+
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self.repository = UserRepository(session)
-
-    async def register_user(self, payload: dict) -> dict:
-        account = UserAccount(
-            email=payload["email"],
-            auth_provider=payload.get("auth_provider", "email"),
-            auth_provider_subject=payload.get("auth_provider_subject"),
-        )
-        person = Person(
-            first_name=payload["first_name"],
-            last_name=payload["last_name"],
-            user_account=account,
-        )
-        created_account = await self.repository.add_account(account)
-        person.user_account_id = created_account.id
-        await self.repository.add_person(person)
-        return {"id": str(created_account.id), "email": created_account.email}
 
     async def get_current_user(self, user_id: UUID | str) -> dict:
         account = await self.repository.get_by_id(UUID(str(user_id)))
@@ -42,7 +32,3 @@ class UserService:
             "last_name": person.last_name if person else "",
             "created_at": account.created_at,
         }
-
-    async def logout(self, user_id: UUID | str, refresh_token: str | None) -> None:
-        del user_id, refresh_token
-        return None
