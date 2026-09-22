@@ -30,3 +30,15 @@ EdgeTypeEnum = pg_enum("edge_type_enum", "parent_child", "partner")
 PartnerTypeEnum = pg_enum("partner_type_enum", "spouse", "partner", "ex_spouse", "ex_partner")
 EdgeStatusEnum = pg_enum("edge_status_enum", "pending", "confirmed", "rejected")
 EdgeSourceEnum = pg_enum("edge_source_enum", "manual", "invite_accept", "search_match", "ai_suggested")
+
+InvitationScopeEnum = pg_enum("invitation_scope_enum", "person", "tree")
+InvitationMethodEnum = pg_enum("invitation_method_enum", "sms", "email", "link", "qr", "whatsapp")
+InvitationStatusEnum = pg_enum(
+    "invitation_status_enum", "pending", "sent", "opened", "accepted", "declined", "expired"
+)
+
+NotificationTypeEnum = pg_enum(
+    "notification_type_enum",
+    "invite_accepted", "relationship_confirmed", "relationship_request",
+    "birthday", "new_family_member",
+)
