@@ -57,7 +57,7 @@ async def reject_relationship(
     return await service.reject_relationship(current_user["sub"], relationship_id)
 
 
-@router.delete("/{relationship_id}", status_code=204, summary="Remove relationship")
+@router.delete("/{relationship_id}", status_code=204, response_model=None, summary="Remove relationship")
 async def remove_relationship(
     relationship_id: UUID,
     current_user: dict = Depends(get_current_user),

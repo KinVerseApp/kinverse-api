@@ -34,7 +34,7 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)) -> To
     return TokenResponse(**result)
 
 
-@router.post("/logout", status_code=204, summary="Logout and revoke refresh token")
+@router.post("/logout", status_code=204, response_model=None, summary="Logout and revoke refresh token")
 async def logout(
     payload: LogoutRequest,
     current_user: dict = Depends(get_current_user),
