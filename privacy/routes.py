@@ -27,11 +27,12 @@ async def get_privacy_settings(
 @router.patch("", response_model=PrivacySettingsResponse, summary="Update privacy settings")
 async def update_privacy_settings(
     payload: PrivacySettingsResponse,
+    person_id: UUID | None = None,
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> PrivacySettingsResponse:
     service = PrivacyService(db)
-    result = await service.update_privacy_settings(current_user["sub"], payload.model_dump())
+    result = await service.update_privacy_settings(current_user["sub"], payload.model_dump(), person_id)
     return PrivacySettingsResponse(settings=[PrivacySetting(**item) for item in result])
 
 

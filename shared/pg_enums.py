@@ -42,3 +42,7 @@ NotificationTypeEnum = pg_enum(
     "invite_accepted", "relationship_confirmed", "relationship_request",
     "birthday", "new_family_member",
 )
+
+PrivacyFieldEnum = pg_enum(
+    "privacy_field_enum", "email", "phone", "date_of_birth", "address", "heritage_info", "biography"
+)
