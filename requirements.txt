@@ -8,6 +8,13 @@ email-validator==2.2.0
 pydantic-settings==2.5.2
 PyJWT==2.9.0
 passlib[bcrypt]==1.7.4
+# passlib 1.7.4's backend detection breaks against bcrypt>=4.1 (it reads
+# bcrypt.__about__.__version__, which newer bcrypt removed) - pinned
+# explicitly or pip resolves the newest bcrypt and every hash_password()/
+# verify_password() call fails with a misleading "password cannot be
+# longer than 72 bytes" ValueError that has nothing to do with the actual
+# password length.
+bcrypt==4.0.1
 python-multipart==0.0.9
 slowapi==0.1.9
 azure-identity==1.19.0
