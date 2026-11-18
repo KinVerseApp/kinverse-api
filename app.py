@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 
-from shared.exceptions import KinVerseAPIError
+from shared.error_handlers import register_exception_handlers
 from auth.routes import router as auth_router
 from invitations.routes import router as invitations_router
 from notifications.routes import router as notifications_router
@@ -38,16 +38,12 @@ app = FastAPI(
 
 configure_telemetry(app)
 
-
-@app.exception_handler(KinVerseAPIError)
-async def kinverse_api_error_handler(request: Request, exc: KinVerseAPIError) -> JSONResponse:
-    # Every service raises KinVerseAPIError subclasses (NotFoundError, ValidationError,
-    # PermissionDeniedError, ...) instead of HTTPException directly, so this single
-    # handler is what turns them into the right status code + body. Without it, a
-    # raised NotFoundError bubbles up as an unhandled 500 instead of a 404.
-    del request
-    http_exc = exc.to_http_exception()
-    return JSONResponse(status_code=http_exc.status_code, content=http_exc.detail)
+# Services raise KinVerseAPIError subclasses (NotFoundError, ValidationError,
+# ConflictError, ...) rather than HTTPException. These handlers turn those,
+# framework errors, database errors and anything unexpected into a JSON
+# {"message", "details"} body with the right status code - see
+# shared/error_handlers.py.
+register_exception_handlers(app)
 
 
 app.include_router(auth_router, prefix="/api/v1/auth")

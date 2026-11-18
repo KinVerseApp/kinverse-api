@@ -4,6 +4,7 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from profiles.repository import ProfileRepository
 from shared.db_types import utcnow
 from shared.exceptions import NotFoundError, ValidationError
 from users.repository import UserRepository
@@ -31,6 +32,7 @@ class RelationshipService:
         self.session = session
         self.repository = RelationshipRepository(session)
         self.user_repository = UserRepository(session)
+        self.profile_repository = ProfileRepository(session)
 
     async def add_relative(self, user_id: UUID | str, payload: dict) -> dict:
         edge_type = payload.get("edge_type", "parent_child")
@@ -40,6 +42,14 @@ class RelationshipService:
         person_a_id: UUID = payload["person_a_id"]
         person_b_id: UUID = payload["person_b_id"]
         partner_type = payload.get("partner_type")
+
+        # Checked here so the caller gets a specific message; the DB's
+        # chk_edge_not_self / foreign keys remain the backstop.
+        if person_a_id == person_b_id:
+            raise ValidationError("A person cannot have a relationship with themselves.")
+        for person_id in (person_a_id, person_b_id):
+            if await self.profile_repository.get_by_id(person_id) is None:
+                raise NotFoundError("Person", str(person_id))
 
         if edge_type == "partner":
             if partner_type not in VALID_PARTNER_TYPES:

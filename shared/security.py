@@ -4,9 +4,9 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import jwt
-from fastapi import HTTPException, status
 from passlib.context import CryptContext
 
+from .exceptions import InvalidAuthError
 from .settings import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -40,5 +40,5 @@ def decode_token(token: str) -> dict[str, Any]:
             options={"require": ["exp", "sub", "type"]},
         )
         return payload
-    except jwt.PyJWTError as exc:  # pragma: no cover - branch for runtime validation
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token") from exc
+    except jwt.PyJWTError as exc:
+        raise InvalidAuthError("Invalid or expired token.") from exc

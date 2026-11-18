@@ -53,7 +53,9 @@ async def test_duplicate_registration_is_rejected(client):
     first = await client.post("/api/v1/auth/register", json=payload)
     assert first.status_code == 200
     second = await client.post("/api/v1/auth/register", json=payload)
-    assert second.status_code == 401
+    # 409 Conflict - the credentials aren't wrong, the email is taken.
+    assert second.status_code == 409
+    assert second.json()["message"] == "An account with this email already exists."
 
 
 async def test_login_wrong_password_and_nonexistent_email_give_identical_response(client):
