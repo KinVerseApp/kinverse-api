@@ -47,10 +47,14 @@ class InvitationService:
         if scope not in VALID_SCOPES:
             raise ValidationError(f"scope must be one of {sorted(VALID_SCOPES)}")
 
+        person_id = payload.get("person_id")
+        if person_id is not None and await self.profile_repository.get_by_id(person_id) is None:
+            raise NotFoundError("Person", str(person_id))
+
         channel_value = payload.get("invitee_email") or payload.get("invitee_phone")
         invitation = Invitation(
             inviter_user_account_id=UUID(str(user_id)),
-            invitee_person_id=payload.get("person_id"),
+            invitee_person_id=person_id,
             scope=scope,
             method=method,
             channel_value=channel_value,

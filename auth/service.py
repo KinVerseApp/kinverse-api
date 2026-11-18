@@ -3,11 +3,10 @@ from __future__ import annotations
 from datetime import timedelta
 from uuid import UUID
 
-from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from shared.db_types import utcnow
-from shared.exceptions import InvalidAuthError
+from shared.exceptions import ConflictError, InvalidAuthError
 from shared.security import create_token, decode_token, hash_password, verify_password
 from users.models import Person, UserAccount
 from users.repository import UserRepository
@@ -37,7 +36,11 @@ class AuthService:
     async def register_user(self, payload: dict) -> dict:
         existing = await self.user_repository.get_by_email(payload["email"])
         if existing is not None:
-            raise InvalidAuthError("An account with this email already exists.")
+            # 409, not 401: nothing about the caller's credentials is wrong,
+            # the request conflicts with an existing account. (A concurrent
+            # duplicate that slips past this check hits the unique index
+            # instead, which shared/error_handlers.py also maps to 409.)
+            raise ConflictError("An account with this email already exists.")
 
         account = UserAccount(
             email=payload["email"],
@@ -94,14 +97,17 @@ class AuthService:
         # anything.
         try:
             payload = decode_token(refresh_token)
-        except HTTPException:
-            raise InvalidAuthError("Invalid or expired refresh token.")
+        except InvalidAuthError:
+            raise InvalidAuthError("Invalid or expired refresh token.") from None
 
         if payload.get("type") != "refresh":
             raise InvalidAuthError("This is not a refresh token.")
 
-        user_id = payload.get("sub")
-        user = await self.user_repository.get_by_id(UUID(str(user_id)))
+        try:
+            user_id = UUID(str(payload.get("sub")))
+        except ValueError:
+            raise InvalidAuthError("Invalid or expired refresh token.") from None
+        user = await self.user_repository.get_by_id(user_id)
         if user is None or user.status != "active":
             raise InvalidAuthError("Invalid or expired refresh token.")
 

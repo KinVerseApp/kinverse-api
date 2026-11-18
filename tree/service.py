@@ -37,6 +37,12 @@ class TreeService:
             raise NotFoundError("Person for user", str(user_id))
         return person.id
 
+    async def _require_person(self, person_id: UUID) -> None:
+        # Without this, an unknown person_id is indistinguishable from a real
+        # person with no relatives - both came back as 200 + [].
+        if await self.repository.get_person(person_id) is None:
+            raise NotFoundError("Person", str(person_id))
+
     async def get_tree(self, user_id: UUID | str, root_id: UUID | None = None, limit: int = 50) -> dict:
         root_id = await self._resolve_root(user_id, root_id)
 
@@ -92,6 +98,7 @@ class TreeService:
         return {"root_id": root_id, "nodes": nodes, "total_visible": len(nodes)}
 
     async def get_ancestors(self, person_id: UUID) -> list[dict]:
+        await self._require_person(person_id)
         rows = await self.repository.get_ancestors(person_id)
         return [
             {
@@ -104,6 +111,7 @@ class TreeService:
         ]
 
     async def get_descendants(self, person_id: UUID) -> list[dict]:
+        await self._require_person(person_id)
         rows = await self.repository.get_descendants(person_id)
         return [
             {
@@ -116,6 +124,7 @@ class TreeService:
         ]
 
     async def get_siblings(self, person_id: UUID) -> list[dict]:
+        await self._require_person(person_id)
         rows = await self.repository.get_siblings(person_id)
         return [
             {
@@ -129,6 +138,7 @@ class TreeService:
 
     async def get_family_completeness_score(self, user_id: UUID | str, person_id: UUID) -> dict:
         del user_id
+        await self._require_person(person_id)
         counts = await self.repository.completeness_counts(person_id)
         if not counts:
             return {"score": 0.0, "coverage": "not_available"}
